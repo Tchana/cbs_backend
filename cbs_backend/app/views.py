@@ -7,6 +7,11 @@ from .form import RegisterForm
 
 # Create your views here.
 
+#this view is will be deleted when all apis endpoint will be created
+
+def home(request):
+    return render(request, 'home/home.html')
+
 def register_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
@@ -47,7 +52,7 @@ def login_view(request):
 
         else:
             error_message = "Invalid credentials"
-            
+       
     return render(request, 'accounts/login.html', error_message)
         
         

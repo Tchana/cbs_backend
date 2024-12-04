@@ -16,7 +16,7 @@ class Course(models.Model):
     course_description = models.CharField(max_length=50)
     
     
-class Lessons(models.CharField):
+class Lesson(models.CharField):
     #stranger key from Courses table
     cours = models.ForeignKey(Course, on_delete=models.CASCADE)
     lesson_title =  models.CharField(max_length=50)
