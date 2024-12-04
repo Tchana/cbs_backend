@@ -1,2 +1,3 @@
-username : admin
-password : FaithfulGuardian#7
+username : jesus
+email_address : cbs@mail.com
+password : Echodr@m2
