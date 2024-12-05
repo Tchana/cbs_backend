@@ -12,18 +12,18 @@ from app.models import Lesson
 """
 
 # recuperations des donnees depuis la base de donnees
-
-@api_view(['GET'])
-def getLesson(request):
-    lesson = Lesson.objects.all()
-    serializer = BookSerializer(lesson)
-    return Response(serializer)
     
 @api_view(['GET'])
 def getBooks(request):
     books = Book.objects.all()
-    serializer = BookSerializer(books)
-    return Response(serializer)
+    serializer = BookSerializer(books, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def getLesson(request):
+    lesson = Lesson.objects.all()
+    serializer = BookSerializer(lesson, many=True)
+    return Response(serializer.data)
 
 @api_view(['POST'])
 def addLesson(request):

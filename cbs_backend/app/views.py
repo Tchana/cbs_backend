@@ -3,14 +3,37 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .form import RegisterForm
+from .models import Book
+from .form import RegisterForm, CourseUploadForm
 
 # Create your views here.
 
 #this view is will be deleted when all apis endpoint will be created
 
 def home(request):
-    return render(request, 'templates/home/home.html')
+    return render(request, 'home/home.html')
+
+def upload_view(request):
+    if request.method == 'POST':
+        file_form  = CourseUploadForm(request.POST)
+        if file_form.is_valid():
+            title = request.POST.get('books_title')
+            description = request.POST.get('course_description')
+            category = request.POST.get('course_category')
+            
+            Book.objects.create(
+                book_title = title,
+                book_description = description,
+                book_category = category
+            )
+            
+            ##implementer la fonctionnalite de d'envoie vers le google drice
+    else:
+        file_form  = CourseUploadForm(request.POST)
+    
+    context = {'file_form':file_form}
+    return render(request, 'u')
+        
 
 def register_view(request):
     if request.method == 'POST':

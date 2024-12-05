@@ -1,6 +1,13 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.forms import User
 
+
+class CourseUploadForm(forms.Form):
+    books_title = forms.CharField(max_length=50)
+    books_description = forms.CharField(max_length=50)
+    books_image_name = forms.CharField(max_length=50)
+    books_category = forms.CharField(max_length=50)
+    
 
 class RegisterForm(forms.ModelForm):
     firstname = forms.CharField(max_length=50)
