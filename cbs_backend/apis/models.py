@@ -2,12 +2,12 @@ from django.db import models
 
 # Create your models here.
 
-class Books(models.Model):
+class Book(models.Model):
     books_title = models.CharField(max_length=50)
     books_description = models.CharField(max_length=50)
     books_image_name = models.CharField(max_length=50)
     books_category = models.CharField(max_length=50)
-    
+    book_link = models.CharField(max_length=300)
  
 
 class Course(models.Model):
