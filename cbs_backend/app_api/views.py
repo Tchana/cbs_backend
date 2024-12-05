@@ -1,8 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializer import BookSerializer, LessonSerializer
-from apis.models import Book
-from apis.models import Lesson
+from app.models import Book
+from app.models import Lesson
 
 """
 # L'api doit pouvoir recuperer des donnees depuis la base de donnees

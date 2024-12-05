@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('apis', '0002_rename_courses_course'),
+        ('app', '0002_rename_courses_course'),
     ]
 
     operations = [
