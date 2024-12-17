@@ -1,108 +1,94 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
-from .models import Book
-from .form import RegisterForm, CourseUploadForm
+from django.contrib.auth.decorators import login_required
+from .models import Book, Teacher, Course, Lesson, Student
+from .form import RegisterForm, LessonForm, BookForm
 
-# Create your views here.
 
-#this view is will be deleted when all apis endpoint will be created
-
-def home(request):
-    return render(request, 'home/home.html')
-
-def upload_view(request):
-    if request.method == 'POST':
-        file_form  = CourseUploadForm(request.POST)
-        if file_form.is_valid():
-            title = request.POST.get('books_title')
-            description = request.POST.get('course_description')
-            category = request.POST.get('course_category')
-            
-            Book.objects.create(
-                book_title = title,
-                book_description = description,
-                book_category = category
-            )
-            
-            ##implementer la fonctionnalite de d'envoie vers le google drice
-    else:
-        file_form  = CourseUploadForm(request.POST)
-    
-    context = {'file_form':file_form}
-    return render(request, 'u')
-        
-
-def register_view(request):
+def add_user_view(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
+            fname = form.cleaned_data.get('fname')
+            lname = form.cleaned_data.get('lname')
             username = form.cleaned_data.get('username')
-            firstame = form.cleaned_data.get('firstname')
-            lastname = form.cleaned_data.get('lastname')
             email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
-
-            user = User.objects.create_user(username=username,
-                                            email = email, 
-                                            password=password,
-                                            fname = firstame,
-                                            lname = lastname
-                                            )
+            password  = form.cleaned_data.get('password')
+            role = form.cleaned_data.get('role')
             
-        else:
-            form  = RegisterForm()
-            return render(request, 'accounts/register.html')
-        
-        context ={'form' : form}
-        
-        return render(request, 'accounts/register.html', context)
-    
-    
-
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            next_url = request.POST.get('next') or request.GET.get('next') or 'home'
-            return redirect(next_url)
-
-        else:
-            error_message = "Invalid credentials"
-       
-    return render(request, 'accounts/login.html', error_message)
-        
-        
-def logout_view(request):
-    if request.method == 'POST':
-        logout(request)
-        return redirect('login')
-    
+            #save infos to the database according to roles
+            if role == '1':
+                teacher = Teacher(
+                    fname = fname,
+                    lname = lname,
+                    email = email,
+                    role = role,
+                )
+                
+                teacher.save()
+                
+                #create user teacher
+                user = User.objects.create_user(
+                username= username,
+                password = password,)
+                
+                #login the user and him to the the corresponding page
+                login(request, user)
+                
+                return redirect('teacher-list')
+            
+            if role == '2':
+                
+                student = Student(
+                    fname = fname,
+                    lname = lname,
+                    email = email,
+                    role = role,)
+                
+                student.save()
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,)
+                
+                login(request, user)
+                return redirect('student-list')
     else:
-        return redirect('home')
-    
-# HOME VIEW
-# USING DECORATORS
+        form = RegisterForm()
+        template_name = 'admin/home.html'
+        context = {'form' : form}
+        return render(request, template_name, context)
 
-@login_required
-def home_view(request):
-    return render(request , 'home/home.html')
+def showStudentView(request):
+    students = Student.objects.all()
+    template_name = 'admin/student.html'
+    context = {'students' : students}
+    return render(request, template_name, context)
 
 
-#protected view
+def showTeacherView(request):
+    teachers = Teacher.objects.all()
+    template_name = 'admin/teacher.html'
+    context = {'students' : teachers}
+    return render(request, template_name, context)
 
-class ProtectedView(LoginRequiredMixin):
-    login_url = '/login/'
-    redirect_field_name = 'redirect_to'
-    
-    def get(self, request):
-        return render(request, 'register/protected')
-            
-            
+
+def deleteTeacherView(request, id):
+    teacher = Teacher.objects.get(id = id)
+    if request.method == 'GET':
+        logout(request)
+        teacher.delete()
+    return redirect('teacher-list')
+
+def deleteStudentView(request, id):
+    student = Student.objects.get(id=id)
+    if request.methode == 'GET' :
+        logout(request)
+        student.delete()
+    return redirect('student-list')
         
+
+
+    
+    
+           

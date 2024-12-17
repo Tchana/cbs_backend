@@ -3,26 +3,40 @@ from django.db import models
 # Create your models here.
 
 class Book(models.Model):
-    book_title = models.CharField(max_length=50)
-    book_description = models.CharField(max_length=50)
-    book_category = models.CharField(max_length=50)
-    book_link = models.CharField(max_length=300)
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=50)
+    description = models.CharField(max_length=50)
+    category = models.CharField(max_length=50)
+    link = models.CharField(max_length=300)
  
-
-class Course(models.Model):
-    course_title = models.CharField(max_length=50)
-    course_tutor = models.CharField(max_length=50)
-    course_description = models.CharField(max_length=50)
-    
-    
-class Lesson(models.CharField):
-    #stranger key from Courses table
-    cours = models.ForeignKey(Course, on_delete=models.CASCADE)
-    lesson_title =  models.CharField(max_length=50)
-    lesson_number = models.IntegerField()
-    lesson_description  = models.TextField(blank=True)
-    
+class Teacher(models.Model):
+    id = models.AutoField(primary_key=True)
+    fname = models.CharField(max_length=100)
+    lname = models.CharField(max_length=100)
+    email = models.EmailField()
+    role = models.CharField(max_length=20)
    
+class Course(models.Model):
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=50)
+    description = models.CharField(max_length=50)
+    tutor = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    
+    
+class Lesson(models.Model):
+    id = models.AutoField(primary_key=True)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    title =  models.CharField(max_length=50)
+    number = models.IntegerField()
+    description  = models.TextField(blank=True)
+    
+class Student(models.Model):
+    id = models.AutoField(primary_key=True)
+    fname = models.CharField(max_length=100)
+    lname = models.CharField(max_length=100)
+    
+
+    
     
 
     
