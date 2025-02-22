@@ -60,7 +60,7 @@ class UserLoginView(generics.CreateAPIView):
 
 
 class EditUserProfileView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     def patch(self, request, uuid):
         try:
             user = get_user_model().objects.get(uuid=uuid)
@@ -148,7 +148,7 @@ class ResetPassword(generics.GenericAPIView):
 
 class GetAllUserView(APIView):
     serializer_class = GetUserSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         users = get_user_model().objects.all()
