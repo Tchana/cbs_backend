@@ -59,10 +59,12 @@ class PasswordReset(models.Model):
 
 
 class Course(models.Model):
-    CHOICES = (('Level 1', 'level 1'),
-               ('Level 2', 'Level 2'),
-               ('Level 3', 'Level 3'))
-    level = models.CharField(max_length=20, choices=CHOICES)
+    
+    LEVEL_CHOICES = (('1', '1'),
+                     ('2', '2'),
+                     ('3', '3')) ###Courses levels
+    
+    level = models.CharField(max_length=20, choices=LEVEL_CHOICES)
     teacher = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     title = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=500)

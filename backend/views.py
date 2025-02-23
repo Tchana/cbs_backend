@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 from django.core.mail import send_mail
 from django.conf import settings
 from .serializers import *
-from .models import *
+from .models import*
 import os
 
 
@@ -145,6 +145,7 @@ class ResetPassword(generics.GenericAPIView):
             return Response({'success': 'Password updated'})
         else:
             return Response({'error': 'No user found'}, status=404)
+        
 
 class GetAllUserView(APIView):
     serializer_class = GetUserSerializer
@@ -160,9 +161,10 @@ class GetAllUserView(APIView):
                     'firstname': user.firstname,
                     'lastname': user.lastname,
                     'email': user.email,
+                    'role' : user.role
                 }
                 user_list.append(data)
-            return Response({"users": user_list})
+            return Response(user_list)
 
 
 class GetUser(APIView):
@@ -173,7 +175,6 @@ class GetUser(APIView):
         try:
             user = get_user_model().objects.get(uuid=self.request.user.uuid)
             data = user
-            user.delete()
             return Response({
                 'uuid': user.uuid,
                 'firstame': user.firstname,
@@ -186,7 +187,7 @@ class GetUser(APIView):
 
 class GetTeacherView(APIView):
     serializer_class = GetTeacherSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = []
 
     def get(self, request):
         teachers = get_user_model().objects.filter(role='teacher')
@@ -201,20 +202,21 @@ class GetTeacherView(APIView):
                     'email': teacher.email,
                 }
                 teacher_list.append(data)
-            return Response({"teachers": teacher_list})
+        return Response(teacher_list)
 
 
 class DeleteUser(APIView):
     permission_classes = [permissions.IsAuthenticated]
-
     def delete(self, request, uuid):
         try:
-            user = get_user_model().objects.get(uuid=self.request.user.uuid)
-            data = user
+            user = get_user_model().objects.filter(uuid = uuid).get()
+            infos = user
             user.delete()
             return Response({
-                'uuid': user.uuid,
-                'delete': user.firstname + ' ' + user.last_name + ' :' + user.email
+                'uuid': infos.uuid,
+                'full_name' : infos.firstname + ' ' + infos.lastname,
+                'email':  infos.email,
+                'status' : 'deleted'
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -273,7 +275,7 @@ class GetListCourses(APIView):
                     }
                     data['lessons'].append(lesson_data)
                 datas.append(data)
-            return Response({'courses': datas})
+            return Response(datas)
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
@@ -310,14 +312,29 @@ class AddLessonView(generics.CreateAPIView):
     '''Add Lesson API view'''
     queryset = Lesson.objects.all()
     serializer_class = CreateLessonSerializer
-    permission_classes = [IsNotStudent]
+    permission_classes = [permissions.IsAuthenticated]
 
 
-class GetLesson(viewsets.ModelViewSet):
+class GetLesson(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = GetLessonSerializer
     queryset = Lesson.objects.all()
-
+    
+    def get(self, request, uuid):
+        course = Course.objects.prefetch_related('lessons').get(uuid=uuid)
+        data = []
+        for lesson in course.lessons.all():
+            lesson_data = {
+                    'id': lesson.uuid,
+                    'title': lesson.title,
+                    'description': lesson.description,
+                    'file': lesson.file.url if lesson.file else None
+                    }
+            data.append(lesson_data)
+        
+        return Response({'course_uuid' : f"{course.uuid}",
+                         "lessons" : data})
+       
 
 class EnrollView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
