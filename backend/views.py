@@ -42,6 +42,22 @@ class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
+class BaseManageView(APIView):
+    """
+    The base class for ManageViews
+        A ManageView is a view which is used to dispatch the requests to the appropriate views
+        This is done so that we can use one URL with different methods (GET, PUT, etc)
+    """
+    def dispatch(self, request, *args, **kwargs):
+        if not hasattr(self, 'VIEWS_BY_METHOD'):
+            raise Exception('VIEWS_BY_METHOD static dictionary variable must be defined on a ManageView class!')
+        if request.method in self.VIEWS_BY_METHOD:
+            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
+
+        return Response(status=405)
+
+
+
 
 class UserLoginView(generics.CreateAPIView):
     '''User login API view'''
@@ -72,7 +88,6 @@ class EditUserProfileView(APIView):
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class RequestPasswordReset(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -187,7 +202,7 @@ class GetUser(APIView):
 
 class GetTeacherView(APIView):
     serializer_class = GetTeacherSerializer
-    permission_classes = []
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         teachers = get_user_model().objects.filter(role='teacher')
@@ -200,9 +215,29 @@ class GetTeacherView(APIView):
                     'firstname': teacher.firstname,
                     'lastname': teacher.lastname,
                     'email': teacher.email,
+                    'role' : teacher.role
                 }
                 teacher_list.append(data)
         return Response(teacher_list)
+
+class GetStudentView(APIView):
+    serializer_class = GetStudentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        students = get_user_model().objects.filter(role="student")
+        student_list = []
+        if students is not None:
+            for student in students:
+                data = {
+                    'firstname': student.firstname,
+                    'lastname': student.lastname,
+                    'email': student.email,
+                    'uuid': student.uuid,
+                    'role' : student.role
+                }
+                student_list.append(data)
+            return Response(student_list)
 
 
 class DeleteUser(APIView):
@@ -236,21 +271,6 @@ class GetMe(APIView):
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-
-class GetStudentView(APIView):
-    def get(self, request):
-        students = get_user_model().objects.filter(role="student")
-        student_list = []
-        if students is not None:
-            for student in students:
-                data = {
-                    'firstname': student.firstname,
-                    'lastname': student.lastname,
-                    'email': student.email,
-                    'uuid': student.uuid
-                }
-                student_list.append(data)
-            return Response({"students": student_list})
 
 
 class GetListCourses(APIView):
@@ -308,6 +328,15 @@ class DeleteCourseView(generics.DestroyAPIView):
     pass
 
 
+class CourseManagerView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'POST' :CreateCourseView.as_view,
+        'GET': GetListCourses.as_view,
+        'PATCH': UpdateCourseView.as_view,
+        'DELETE': DeleteCourseView.as_view
+    }
+
+
 class AddLessonView(generics.CreateAPIView):
     '''Add Lesson API view'''
     queryset = Lesson.objects.all()
@@ -334,8 +363,13 @@ class GetLesson(APIView):
         
         return Response({'course_uuid' : f"{course.uuid}",
                          "lessons" : data})
-       
 
+class LessonManagerView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'POST' :AddLessonView.as_view,
+        'GET': GetLesson.as_view,
+    }
+    
 class EnrollView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = EnrollSerializer

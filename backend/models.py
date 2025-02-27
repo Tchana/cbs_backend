@@ -106,6 +106,7 @@ class Book(models.Model):
     book = models.FileField(upload_to='books')
     category = models.CharField(max_length=50, choices=CHOICES)
     book_cover = models.FileField(upload_to='book_cover')
+    description = models.TextField(max_length=1000)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     def __str__(self):
@@ -113,6 +114,7 @@ class Book(models.Model):
 
 
 class Audio(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100)
     audio = models.FileField(upload_to='teaching', unique=True)
 
@@ -123,6 +125,7 @@ class Audio(models.Model):
 
 
 class Video(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100)
     video = models.FileField(upload_to='teaching', unique=True)
 
