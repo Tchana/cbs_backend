@@ -20,22 +20,18 @@ import os
 def home(request):
     return HttpResponse('Welcome to cbs API')
 
-
 class IsAdmin(permissions.BasePermission):
     '''custom permission for Admin'''
 
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == 'ADMIN'
 
-
 class isReaders(permissions.BasePermission):
     pass
-
 
 class IsNotStudent(permissions.BasePermission):
     '''custom permission for all users who are not student(admin and teacher)'''
     pass
-
 
 class UserRegistrationView(generics.CreateAPIView):
     '''User registration API view'''
@@ -55,9 +51,6 @@ class BaseManageView(APIView):
             return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
 
         return Response(status=405)
-
-
-
 
 class UserLoginView(generics.CreateAPIView):
     '''User login API view'''
@@ -108,7 +101,7 @@ class RequestPasswordReset(generics.GenericAPIView):
             
             subject = 'Password Reset'
             message = f"""
-                Dear {user.firstname}
+                Dear {user.firstName}
                 
                 We received a request to reset your password for your account. 
                 If you did not make this request, please ignore this email.
@@ -161,7 +154,6 @@ class ResetPassword(generics.GenericAPIView):
         else:
             return Response({'error': 'No user found'}, status=404)
         
-
 class GetAllUserView(APIView):
     serializer_class = GetUserSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -173,10 +165,11 @@ class GetAllUserView(APIView):
             for user in users:
                 data = {
                     'id': user.uuid,
-                    'firstname': user.firstname,
-                    'lastname': user.lastname,
+                    'firstName': user.firstName,
+                    'lastName': user.lastName,
                     'email': user.email,
-                    'role' : user.role
+                    'role' : user.role,
+                    'pImage' : user.pImage
                 }
                 user_list.append(data)
             return Response(user_list)
@@ -192,13 +185,12 @@ class GetUser(APIView):
             data = user
             return Response({
                 'uuid': user.uuid,
-                'firstame': user.firstname,
-                'lastname': user.lastname,
+                'firstame': user.firstName,
+                'lastName': user.lastName,
                 'email': user.email,
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
 
 class GetTeacherView(APIView):
     serializer_class = GetTeacherSerializer
@@ -207,19 +199,29 @@ class GetTeacherView(APIView):
     def get(self, request):
         teachers = get_user_model().objects.filter(role='teacher')
         teacher_list = []
-
-        if teachers is not None:
-            for teacher in teachers:
-                data = {
-                    'id': teacher.uuid,
-                    'firstname': teacher.firstname,
-                    'lastname': teacher.lastname,
-                    'email': teacher.email,
-                    'role' : teacher.role
-                }
-                teacher_list.append(data)
+        for teacher in teachers:
+            info = {}
+            courses = Course.objects.filter(teacher=teacher.uuid)
+            if courses:
+                course_list = []
+                for course in courses:
+                    datas = {
+                        'uuid' : course.uuid,
+                        'title' : course.title,
+                        'description' : course.description
+                    }
+                course_list.append(datas)
+            
+            info = {
+                'uuid' : teacher.uuid,
+                'firstName' : teacher.firstName,
+                'lastName' : teacher.lastName,
+                'email' : teacher.email,
+                'course' : course_list
+            }
+            teacher_list.append(info)
         return Response(teacher_list)
-
+        
 class GetStudentView(APIView):
     serializer_class = GetStudentSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -230,16 +232,16 @@ class GetStudentView(APIView):
         if students is not None:
             for student in students:
                 data = {
-                    'firstname': student.firstname,
-                    'lastname': student.lastname,
+                    'firstName': student.firstName,
+                    'lastName': student.lastName,
                     'email': student.email,
                     'uuid': student.uuid,
+                    'pImage' : student.pImage,
                     'role' : student.role
                 }
                 student_list.append(data)
             return Response(student_list)
-
-
+        
 class DeleteUser(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def delete(self, request, uuid):
@@ -249,14 +251,13 @@ class DeleteUser(APIView):
             user.delete()
             return Response({
                 'uuid': infos.uuid,
-                'full_name' : infos.firstname + ' ' + infos.lastname,
+                'full_name' : infos.firstName + ' ' + infos.lastName,
                 'email':  infos.email,
                 'status' : 'deleted'
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-
+        
 class GetMe(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -265,27 +266,36 @@ class GetMe(APIView):
             return Response({
                 'uuid': user.uuid,
                 'email': user.email,
-                'firstname': user.firstname,
-                'lastname': user.lastname,
+                'firstName': user.firstName,
+                'lastName': user.lastName,
                 'p_image': str(user.p_image)})
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-
 class GetListCourses(APIView):
     permission_classes = [permissions.AllowAny]
-
     def get(self, request):
         try:
-            courses = Course.objects.prefetch_related('lessons').all()
+            # Prefetch related lessons and teachers for efficiency
+            courses = Course.objects.prefetch_related('lessons', 'teacher').all()
             datas = []
+
             for course in courses:
                 data = {
-                    'course_id': course.uuid,
-                    'course_name': course.title,
+                    'id': course.uuid,
+                    'title': course.title,
+                    'description': course.description,
+                    'level': course.level,
+                    'teacher': {
+                        'id': course.teacher.uuid,
+                        'firstName': course.teacher.firstName,
+                        'lastName': course.teacher.lastName,
+                    },
                     'lessons': []
                 }
+
+                # Loop through the pre-fetched lessons
                 for lesson in course.lessons.all():
                     lesson_data = {
                         'id': lesson.uuid,
@@ -294,8 +304,10 @@ class GetListCourses(APIView):
                         'file': lesson.file.url if lesson.file else None
                     }
                     data['lessons'].append(lesson_data)
+
                 datas.append(data)
             return Response(datas)
+
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
@@ -326,7 +338,6 @@ class UpdateCourseView(APIView):
 class DeleteCourseView(generics.DestroyAPIView):
     '''Delete course API view'''
     pass
-
 
 class CourseManagerView(BaseManageView):
     VIEWS_BY_METHOD = {

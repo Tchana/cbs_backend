@@ -26,10 +26,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
                ('admin', 'ADMIN'),
                )
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    firstname = models.CharField(max_length=100)
-    lastname = models.CharField(max_length=100)
+    firstName = models.CharField(max_length=100)
+    lastName = models.CharField(max_length=100)
     email = models.EmailField(_("email address"), unique=True)
-    p_image = models.ImageField(upload_to='profile_pictures')
+    pImage = models.ImageField(upload_to='profile_pictures')
     role = models.CharField(max_length=20, choices=CHOICES)
 
     ###Default fields####
