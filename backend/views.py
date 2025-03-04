@@ -169,7 +169,7 @@ class GetAllUserView(APIView):
                     'lastName': user.lastName,
                     'email': user.email,
                     'role' : user.role,
-                    'pImage' : user.pImage
+                    'pImage' : str(user.pImage)
                 }
                 user_list.append(data)
             return Response(user_list)
@@ -188,6 +188,7 @@ class GetUser(APIView):
                 'firstame': user.firstName,
                 'lastName': user.lastName,
                 'email': user.email,
+                'pImage' : str(user.pImage)
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -217,6 +218,7 @@ class GetTeacherView(APIView):
                 'firstName' : teacher.firstName,
                 'lastName' : teacher.lastName,
                 'email' : teacher.email,
+                'pImage' : str(teacher.pImage),
                 'course' : course_list
             }
             teacher_list.append(info)
@@ -231,13 +233,25 @@ class GetStudentView(APIView):
         student_list = []
         if students is not None:
             for student in students:
+                enrollement_list = []
+                enrolled_courses = Enrollement.objects.filter(student=student.uuid)
+                
+                if enrolled_courses:
+                    for enroll_course in enrolled_courses:
+                        info ={
+                            'uuid' : enroll_course.course.uuid,
+                            'title' : enroll_course.course.title,
+                            'description': enroll_course.course.description
+                        }
+                        enrollement_list.append(info)
                 data = {
+                    'uuid': student.uuid,
                     'firstName': student.firstName,
                     'lastName': student.lastName,
                     'email': student.email,
-                    'uuid': student.uuid,
-                    'pImage' : student.pImage,
-                    'role' : student.role
+                    'pImage' : str(student.pImage),
+                    'role' : student.role,
+                    'enrolled_course' : info
                 }
                 student_list.append(data)
             return Response(student_list)
@@ -268,7 +282,7 @@ class GetMe(APIView):
                 'email': user.email,
                 'firstName': user.firstName,
                 'lastName': user.lastName,
-                'p_image': str(user.p_image)})
+                'pImage': str(user.pImage)})
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -337,7 +351,18 @@ class UpdateCourseView(APIView):
 
 class DeleteCourseView(generics.DestroyAPIView):
     '''Delete course API view'''
-    pass
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CourseSerializer
+    
+    def delete(self, request, uuid):
+        course = Course.objects.filter(uuid=uuid).get()
+        info = {
+            'title' : course.title,
+            'description' : course.description,
+            'level' : course.level,
+            'status' : 'deleted'
+        }
+        return Response(info)
 
 class CourseManagerView(BaseManageView):
     VIEWS_BY_METHOD = {
@@ -398,15 +423,20 @@ class GetLessonView(generics.ListAPIView):
 
 
 class AddBookView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = AddBookSerializer
 
 
-class GetBookView(viewsets.ViewSet):
-    permission_classes = [permissions.AllowAny]
+class GetBookView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = GetBookSerializer
     queryset = Course.objects.all()
 
+class BookManagerView(BaseManageView):
+    VIEWS_BY_METHOD = {
+        'POST' :AddBookView.as_view,
+        'GET': GetBookView.as_view,
+    }
 
 
 class AddAudioView(generics.CreateAPIView):

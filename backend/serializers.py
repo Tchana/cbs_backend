@@ -64,7 +64,7 @@ class GetBookSerializer(serializers.ModelSerializer):
         model = Book
         fields = '__all__'
      
-class GetCourseSerializer(serializers.ModelSerializer):
+class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'

@@ -17,6 +17,7 @@ urlpatterns = [
     path('reset/<token>', ResetPassword.as_view(), name='r_resetpwd'),
     
     path('course', CourseManagerView.as_view()),
+    path('course/delete/<uuid>', DeleteCourseView.as_view()),
     path('course/edit/<uuid>', UpdateCourseView.as_view(), name='u_course'),
     path('course/enroll', EnrollView.as_view(), name='subcourse'),
     
@@ -26,9 +27,7 @@ urlpatterns = [
     path('user/me', GetMe.as_view(), name='g_p'),
     path('user/<uuid>', DeleteUser.as_view(), name='d_user'),
     
-   
-    path('book', AddBookView.as_view(), name="a_book"),
-    path('book', GetBookView.as_view({'get': 'list'}), name="g_book"),
+    path('book', BookManagerView.as_view()),
     
     path('audio', AddAudioView.as_view(), name='a_audio'),
     path('video', AddVideoView.as_view(), name='a_video') 
