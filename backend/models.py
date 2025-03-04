@@ -98,20 +98,15 @@ class Lesson(models.Model):
 
 
 class Book(models.Model):
-    CHOICES = (("bible", "bible"),
-               ("commentary", "commentary"),
-               ("random", "random")
-               )
     title = models.CharField(max_length=100)
-    book = models.FileField(upload_to='books')
-    category = models.CharField(max_length=50, choices=CHOICES)
-    book_cover = models.FileField(upload_to='book_cover')
+    author = models.CharField(max_length=100)
+    book = models.FileField(upload_to='books/file')
+    category = models.CharField(max_length=50)
+    bookCover = models.FileField(upload_to='books/book_cover')
     description = models.TextField(max_length=1000)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     def __str__(self):
         return self.title
-
 
 class Audio(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

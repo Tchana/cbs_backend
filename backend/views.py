@@ -423,21 +423,74 @@ class GetLessonView(generics.ListAPIView):
 
 
 class AddBookView(generics.CreateAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = AddBookSerializer
+    
 
+class GetBookCategory(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = GetBookSerializer
+    queryset = Book
+    def get(self, request, category):
+       books =[]
+       try:
+           booksInCategory = Book.objects.filter(category=category)
+           for book in booksInCategory:
+               info = {
+               'uuid' : book.uuid,
+               'title' : book.title,
+               'book' : str(book.book),
+               'category' : book.category,
+               'description' : book.description,
+           }
+               books.append(info)
+           return Response(books, status = status.HTTP_200_OK)
+       except Book.DoesNotExist:
+           return Response(status=status.HTTP_404_NOT_FOUND)
+
+class GetBookInfo(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = GetBookSerializer
+    queryset = Book
+    def get(self, request, category):
+       books =[]
+       try:
+           booksInCategory = Book.objects.all(category=category)
+           for book in booksInCategory:
+               info = {
+               'uuid' : book.uuid,
+               'title' : book.title,
+               'book' : str(book.book),
+               'category' : book.category,
+               'description' : book.description,
+           }
+               books.append(info)
+           return Response(booksInCategory, status = status.HTTP_200_OK)
+       except Book.DoesNotExist:
+           return Response(status=status.HTTP_404_NOT_FOUND)
 
 class GetBookView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = GetBookSerializer
-    queryset = Course.objects.all()
-
-class BookManagerView(BaseManageView):
-    VIEWS_BY_METHOD = {
-        'POST' :AddBookView.as_view,
-        'GET': GetBookView.as_view,
-    }
-
+    
+    def get(self, request):
+        all_books =[]
+        try:
+            books = Book.objects.all()
+            for book in books:
+                info = {
+                'uuid' : book.uuid,
+                'title' : book.title,
+                'book' : str(book.book),
+                'category' : book.category,
+                'description' : book.description,
+            }
+                all_books.append(info)
+            return Response(all_books, status = status.HTTP_200_OK)
+        except Book.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+            
+        
 
 class AddAudioView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]

@@ -57,7 +57,7 @@ class GetStudentSerializer(serializers.Serializer):
 class AddBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ('title', 'book')
+        fields = ('title', 'book', 'category', 'bookCover', 'description')
         
 class GetBookSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,9 +80,7 @@ class CreateCourseSerializer(serializers.ModelSerializer):
         course = Course(title = validated_data['title'],
                         description=validated_data['description'],
                         teacher = validated_data['teacher'],
-                        level = validated_data['level']
-                        
-                        )
+                        level = validated_data['level'])
         course.save()
         return course
 
