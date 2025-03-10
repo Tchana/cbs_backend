@@ -6,11 +6,11 @@ from .models import *
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    p_image = serializers.FileField()
+    pImage = serializers.FileField()
     class Meta:
         User = get_user_model()
         model = User
-        fields = ('firstname', 'lastname','email', 'password', 'role', 'p_image')
+        fields = ('firstName', 'lastName','email', 'password', 'role', 'pImage')
         
     def create(self, validated_data):
         User = get_user_model()
@@ -18,9 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(email = validated_data['email'], 
                                         password = validated_data['password'], 
                                         role = validated_data['role'],
-                                        firstname = validated_data["firstname"],
-                                        lastname =  validated_data["lastname"],
-                                        p_image = validated_data['p_image']
+                                        firstName = validated_data["firstName"],
+                                        lastName =  validated_data["lastName"],
+                                        pImage = validated_data['pImage']
                                         )
         Token.objects.create(user=user)
 
@@ -33,7 +33,7 @@ class LoginSerializer(serializers.Serializer):
 class GetTeacherSerializer(serializers.Serializer):
      class Meta :
          model = get_user_model()
-         fields = ('id', 'email', 'firstname', 'lastname', 'uuid')
+         fields = ('id', 'email', 'firstName', 'lastName', 'uuid')
 
 class ResetPasswordRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -47,12 +47,12 @@ class ResetPasswordSerializer(serializers.Serializer):
 class GetUserSerializer(serializers.Serializer):
      class Meta :
          model = get_user_model()
-         fields = ('id', 'email', 'firstname', 'lastname', 'uuid')
+         fields = ('id', 'email', 'firstName', 'lastName', 'uuid')
 
 class GetStudentSerializer(serializers.Serializer):
      class Meta :
          model = get_user_model()
-         fields = ('id', 'email', 'firstname', 'lastname')
+         fields = ('id', 'email', 'firstName', 'lastName')
 
 class AddBookSerializer(serializers.ModelSerializer):
     class Meta:

@@ -17,7 +17,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         firstname : First Name of the user
         lastname : Last name of the user
         email : email of the user
-        p_image : profil image of the user
+        pImage : profil image of the user
         role : role of the user('admin', 'teacher', 'student')
         
     '''
