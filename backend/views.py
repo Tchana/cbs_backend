@@ -425,7 +425,6 @@ class GetLessonView(generics.ListAPIView):
 class AddBookView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = AddBookSerializer
-    
 
 class GetBookCategory(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -490,12 +489,9 @@ class GetBookView(APIView):
         except Book.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
             
-        
-
 class AddAudioView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = AudioSerializer
-
 
 class AddVideoView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]

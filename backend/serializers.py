@@ -57,7 +57,7 @@ class GetStudentSerializer(serializers.Serializer):
 class AddBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ('title', 'book', 'category', 'bookCover', 'description')
+        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language')
         
 class GetBookSerializer(serializers.ModelSerializer):
     class Meta:
