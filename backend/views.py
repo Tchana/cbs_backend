@@ -169,7 +169,7 @@ class GetAllUserView(APIView):
                     'lastName': user.lastName,
                     'email': user.email,
                     'role' : user.role,
-                    'pImage' : str(user.pImage)
+                    'pImage' : request.build_absolute_uri(user.pImage.url)
                 }
                 user_list.append(data)
             return Response(user_list)
@@ -188,7 +188,7 @@ class GetUser(APIView):
                 'firstame': user.firstName,
                 'lastName': user.lastName,
                 'email': user.email,
-                'pImage' : str(user.pImage)
+                'pImage' : request.build_absolute_uri(user.pImage.url)
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -218,7 +218,7 @@ class GetTeacherView(APIView):
                 'firstName' : teacher.firstName,
                 'lastName' : teacher.lastName,
                 'email' : teacher.email,
-                'pImage' : str(teacher.pImage),
+                'pImage' : request.build_absolute_uri(teacher.pImage.url),
                 'course' : course_list
             }
             teacher_list.append(info)
@@ -249,9 +249,9 @@ class GetStudentView(APIView):
                     'firstName': student.firstName,
                     'lastName': student.lastName,
                     'email': student.email,
-                    'pImage' : str(student.pImage),
+                    'pImage' : request.build_absolute_uri(student.pImage.url),
                     'role' : student.role,
-                    'enrolled_course' : info
+                    'enrolled_course' : enrollement_list
                 }
                 student_list.append(data)
             return Response(student_list)
@@ -282,7 +282,7 @@ class GetMe(APIView):
                 'email': user.email,
                 'firstName': user.firstName,
                 'lastName': user.lastName,
-                'pImage': str(user.pImage)})
+                'pImage': request.build_absolute_uri(user.pImage.url)})
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -323,7 +323,7 @@ class GetListCourses(APIView):
             return Response(datas)
 
         except Exception as e:
-            return Response({'error': str(e)}, status=500)
+            return Response({'error': request.build_absolute_uri(e)}, status=500)
 
 
 class CreateCourseView(generics.CreateAPIView):
@@ -439,7 +439,7 @@ class GetBookCategory(APIView):
                info = {
                'uuid' : book.uuid,
                'title' : book.title,
-               'book' : str(book.book),
+               'book' : request.build_absolute_uri(book.book),
                'category' : book.category,
                'description' : book.description,
            }
@@ -460,7 +460,7 @@ class GetBookInfo(APIView):
                info = {
                'uuid' : book.uuid,
                'title' : book.title,
-               'book' : str(book.book),
+               'book' : request.build_absolute_uri(book.book),
                'category' : book.category,
                'description' : book.description,
            }
@@ -481,11 +481,11 @@ class GetBookView(APIView):
                 info = {
                 'uuid' : book.uuid,
                 'title' : book.title,
-                'book' : str(book.book),
+                'book' : request.build_absolute_uri(book.book),
                 'category' : book.category,
                 'description' : book.description,
                 'author' : book.author,
-                'bookCover' : str(book.bookCover),
+                'bookCover' : request.build_absolute_uri(book.bookCover),
                 'language' : book.language
             }
                 all_books.append(info)
