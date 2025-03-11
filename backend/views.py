@@ -362,6 +362,7 @@ class DeleteCourseView(generics.DestroyAPIView):
             'level' : course.level,
             'status' : 'deleted'
         }
+        course.delete()
         return Response(info)
 
 class CourseManagerView(BaseManageView):
@@ -483,6 +484,9 @@ class GetBookView(APIView):
                 'book' : str(book.book),
                 'category' : book.category,
                 'description' : book.description,
+                'author' : book.author,
+                'bookCover' : str(book.bookCover),
+                'language' : book.language
             }
                 all_books.append(info)
             return Response(all_books, status = status.HTTP_200_OK)
