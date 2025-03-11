@@ -481,7 +481,7 @@ class GetBookView(APIView):
                 info = {
                 'uuid' : bk.uuid,
                 'title' : bk.title,
-                'book' : request.build_absolute_uri(bk.book.url),
+                'book' : request.build_absolute_uri(bk.book),
                 'category' : bk.category,
                 'description' : bk.description,
                 'author' : bk.author,
