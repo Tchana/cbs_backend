@@ -477,16 +477,16 @@ class GetBookView(APIView):
         all_books =[]
         try:
             books = Book.objects.all()
-            for book in books:
+            for bk in books:
                 info = {
-                'uuid' : book.uuid,
-                'title' : book.title,
-                'book' : request.build_absolute_uri(book.book),
-                'category' : book.category,
-                'description' : book.description,
-                'author' : book.author,
-                'bookCover' : request.build_absolute_uri(book.bookCover),
-                'language' : book.language
+                'uuid' : bk.uuid,
+                'title' : bk.title,
+                'book' : request.build_absolute_uri(bk.book.url),
+                'category' : bk.category,
+                'description' : bk.description,
+                'author' : bk.author,
+                'bookCover' : request.build_absolute_uri(bk.bookCover.url),
+                'language' : bk.language
             }
                 all_books.append(info)
             return Response(all_books, status = status.HTTP_200_OK)

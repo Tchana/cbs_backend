@@ -89,7 +89,7 @@ class Enrollement(models.Model):
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=100)
-    file = models.FileField(upload_to='')
+    file = models.FileField(upload_to='courses/lessons')
     description = models.TextField(max_length=500)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     complete = models.BooleanField()
@@ -108,6 +108,7 @@ class Book(models.Model):
     description = models.TextField(max_length=1000)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     language = models.CharField(max_length=100)
+    
     def __str__(self):
         return self.title
 
