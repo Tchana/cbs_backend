@@ -14,13 +14,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     '''
         description of fields name of custom FIELDS of the table CustomUSer
         
-        firstname : First Name of the user
+        firstName : First Name of the user
         lastname : Last name of the user
         email : email of the user
         pImage : profil image of the user
         role : role of the user('admin', 'teacher', 'student')
         
     '''
+    
     CHOICES = (('teacher', 'TEACHER'),
                ('student', 'STUDENT'),
                ('admin', 'ADMIN'),
@@ -31,7 +32,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     pImage = models.ImageField(upload_to='profile_pictures')
     role = models.CharField(max_length=20, choices=CHOICES)
-   
     ###Default fields####
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -79,13 +79,11 @@ class Course(models.Model):
             self.title = self.title.lower()
         super().save(*args, **kwargs)
 
-
 class Enrollement(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='registrations')
     student = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='registrations')
     registered_on = models.DateTimeField(auto_now_add=True)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
@@ -98,7 +96,6 @@ class Lesson(models.Model):
     
     def __str__(self):
         return self.title
-
 
 class Book(models.Model):
     title = models.CharField(max_length=100)

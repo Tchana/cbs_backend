@@ -23,7 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
                                         pImage = validated_data['pImage']
                                         )
         Token.objects.create(user=user)
-
         return user
     
 class LoginSerializer(serializers.Serializer):
@@ -60,9 +59,16 @@ class AddBookSerializer(serializers.ModelSerializer):
         fields = ('title', 'book', 'category', 'bookCover', 'description', 'language')
         
 class GetBookSerializer(serializers.ModelSerializer):
+    book = serializers.SerializerMethodField()
     class Meta:
         model = Book
-        fields = '__all__'
+        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language')
+        
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
      
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:

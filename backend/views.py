@@ -202,8 +202,8 @@ class GetTeacherView(APIView):
         for teacher in teachers:
             info = {}
             courses = Course.objects.filter(teacher=teacher.uuid)
+            course_list = []
             if courses:
-                course_list = []
                 for course in courses:
                     datas = {
                         'uuid' : course.uuid,
@@ -289,6 +289,9 @@ class GetMe(APIView):
 class GetListCourses(APIView):
     permission_classes = [permissions.AllowAny]
     def get(self, request):
+        scheme = request.scheme
+        host = request.get_host()
+        full_host_url = f"{scheme}://{host}"
         try:
             # Prefetch related lessons and teachers for efficiency
             courses = Course.objects.prefetch_related('lessons', 'teacher').all()
@@ -300,7 +303,7 @@ class GetListCourses(APIView):
                     'title': course.title,
                     'description': course.description,
                     'level': course.level,
-                    'courseCover' : course.courseCover ,
+                    'courseCover' : str(course.courseCover.url) ,
                     'teacher': {
                         'id': course.teacher.uuid,
                         'firstName': course.teacher.firstName,
@@ -315,13 +318,12 @@ class GetListCourses(APIView):
                         'id': lesson.uuid,
                         'title': lesson.title,
                         'description': lesson.description,
-                        'file': lesson.file.url if lesson.file else None
+                        'file': request.build_absolute_uri(lesson.file.url) if lesson.file else None
                     }
                     data['lessons'].append(lesson_data)
-
+                
                 datas.append(data)
             return Response(datas)
-
         except Exception as e:
             return Response({'error': request.build_absolute_uri(e)}, status=500)
 
@@ -439,7 +441,7 @@ class GetBookCategory(APIView):
                info = {
                'uuid' : book.uuid,
                'title' : book.title,
-               'book' : request.build_absolute_uri(book.book),
+               'book' : request.build_absolute_uri(book.book.url),
                'category' : book.category,
                'description' : book.description,
            }
@@ -481,7 +483,7 @@ class GetBookView(APIView):
                 info = {
                 'uuid' : bk.uuid,
                 'title' : bk.title,
-                'book' : request.build_absolute_uri(bk.book),
+                'book' : request.build_absolute_uri(bk.book.url),
                 'category' : bk.category,
                 'description' : bk.description,
                 'author' : bk.author,
