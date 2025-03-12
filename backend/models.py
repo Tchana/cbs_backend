@@ -69,6 +69,7 @@ class Course(models.Model):
     title = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=500)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    courseCover = models.ImageField(upload_to='courses/courseCover')
 
     def __str__(self):
         return self.title
@@ -89,11 +90,11 @@ class Enrollement(models.Model):
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
     title = models.CharField(max_length=100)
-    file = models.FileField(upload_to='')
+    file = models.FileField(upload_to='courses/lessons')
     description = models.TextField(max_length=500)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    complete = models.BooleanField()
-    open  = models.BooleanField()
+    complete = models.BooleanField(default=False)
+    open  = models.BooleanField(default=False)
     
     def __str__(self):
         return self.title

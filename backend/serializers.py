@@ -74,13 +74,14 @@ class CreateCourseSerializer(serializers.ModelSerializer):
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role='teacher'))
     class Meta:
         model = Course
-        fields =  ('title', 'description', 'teacher', 'level')
+        fields =  ('title', 'description', 'teacher', 'level', 'courseCover')
         
     def create(self, validated_data):
         course = Course(title = validated_data['title'],
                         description=validated_data['description'],
                         teacher = validated_data['teacher'],
-                        level = validated_data['level'])
+                        level = validated_data['level'],
+                        courseCover = validated_data['courseCover'])
         course.save()
         return course
 

@@ -173,8 +173,7 @@ class GetAllUserView(APIView):
                 }
                 user_list.append(data)
             return Response(user_list)
-
-
+        
 class GetUser(APIView):
     serializer_class = GetUserSerializer
     permission_classes = [permissions.AllowAny]
@@ -301,6 +300,7 @@ class GetListCourses(APIView):
                     'title': course.title,
                     'description': course.description,
                     'level': course.level,
+                    'courseCover' : course.courseCover ,
                     'teacher': {
                         'id': course.teacher.uuid,
                         'firstName': course.teacher.firstName,
