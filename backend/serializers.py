@@ -118,7 +118,7 @@ class CreateLessonSerializer(serializers.ModelSerializer):
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     class Meta:
         model = Lesson
-        fields = ('course', 'title', 'file', 'description')
+        fields = ('uuid','course', 'title', 'file', 'description')
             
     def create(self, validated_data):
         lesson = Lesson(title = validated_data['title'],

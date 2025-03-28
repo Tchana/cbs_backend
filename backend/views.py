@@ -18,7 +18,8 @@ import os
 # Create your views here.
 
 def home(request):
-    return HttpResponse('Welcome to cbs API')
+    if request.method == 'GET':
+        return render(request, 'welcome.html')
 
 class IsAdmin(permissions.BasePermission):
     '''custom permission for Admin'''
@@ -357,16 +358,19 @@ class DeleteCourseView(generics.DestroyAPIView):
     serializer_class = CourseSerializer
     
     def delete(self, request, uuid):
-        course = Course.objects.filter(uuid=uuid).get()
-        info = {
-            'title' : course.title,
-            'description' : course.description,
-            'level' : course.level,
-            'status' : 'deleted'
-        }
-        course.delete()
-        return Response(info)
-
+        try:
+            course = Course.objects.filter(uuid=uuid).get()
+            info = {
+                'title' : course.title,
+                'description' : course.description,
+                'level' : course.level,
+                'status' : 'deleted'
+            }
+            course.delete()
+            return Response(info)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+            
 class CourseManagerView(BaseManageView):
     VIEWS_BY_METHOD = {
         'POST' :CreateCourseView.as_view,
@@ -449,6 +453,35 @@ class GetBookCategory(APIView):
            return Response(books, status = status.HTTP_200_OK)
        except Book.DoesNotExist:
            return Response(status=status.HTTP_404_NOT_FOUND)
+       
+class EditLessonView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def patch(self, request, uuid):
+        try:
+            lesson = Lesson.objects.get(uuid=uuid)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = GetLessonSerializer(lesson, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteLessonView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def delete(self, request, uuid):
+        try:
+            lesson = Lesson.objects.filter(uuid=uuid).get()
+            datas = lesson
+            lesson.delete()
+            return Response({
+                'uuid': datas.uuid,
+                'title' : datas.title,
+                'status' : 'deleted',
+            })
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 class GetBookInfo(APIView):
     permission_classes = [permissions.IsAuthenticated]

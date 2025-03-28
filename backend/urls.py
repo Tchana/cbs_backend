@@ -3,6 +3,7 @@ from .views import *
 
 from django.conf.urls.static import static
 from django.conf import settings
+
 urlpatterns = [
     path('', home),
     path('register', UserRegistrationView.as_view(), name='register'),
@@ -23,6 +24,8 @@ urlpatterns = [
     
     path('lesson', LessonManagerView.as_view(), name='c_lesson'),
     path('lesson/get/<uuid>', GetLesson.as_view(), name='g_lesson'),
+    path('lesson/edit/<uuid>', EditLessonView.as_view()),
+    path('lesson/del/<uuid>', DeleteLessonView.as_view()),
     
     path('user/me', GetMe.as_view(), name='g_p'),
     path('user/<uuid>', DeleteUser.as_view(), name='d_user'),
