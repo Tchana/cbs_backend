@@ -100,7 +100,7 @@ DATABASES = {
         'HOST': HOST,   # Or the IP address where MySQL is hosted
         'PORT': PORT,        # MySQL port (default is 3306)
     }
-}
+
 
 
 # Password validation
