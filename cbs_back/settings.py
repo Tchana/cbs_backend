@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -83,14 +86,19 @@ WSGI_APPLICATION = 'cbs_back.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+NAME = os.getenv('NAME')
+USER = os.getenv('USER')
+PASSWORD = os.getenv('PASSWORD')
+HOST = os.getenv('HOST')
+PORT = os.getenv('PORT')
+
 DATABASES = {
-    'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mardoche$default',
-        'USER': 'mardoche',
-        'PASSWORD': '!uJ!7iRX3zb$4wi',
-        'HOST': 'mardoche.mysql.pythonanywhere-services.com',   # Or the IP address where MySQL is hosted
-        'PORT': '3306',        # MySQL port (default is 3306)
+        'NAME': NAME,
+        'USER': USER,
+        'PASSWORD': PASSWORD,
+        'HOST': HOST,   # Or the IP address where MySQL is hosted
+        'PORT': PORT,        # MySQL port (default is 3306)
     }
 }
 
