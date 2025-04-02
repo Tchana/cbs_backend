@@ -86,7 +86,7 @@ WSGI_APPLICATION = 'cbs_back.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mardoche',
+        'NAME': 'mardoche$default',
         'USER': 'mardoche',
         'PASSWORD': '!uJ!7iRX3zb$4wi',
         'HOST': 'mardoche.mysql.pythonanywhere-services.com',   # Or the IP address where MySQL is hosted
