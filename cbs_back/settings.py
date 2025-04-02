@@ -85,8 +85,12 @@ WSGI_APPLICATION = 'cbs_back.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'mardoche',
+        'USER': 'mardoche',
+        'PASSWORD': '!uJ!7iRX3zb$4wi',
+        'HOST': 'mardoche.mysql.pythonanywhere-services.com',   # Or the IP address where MySQL is hosted
+        'PORT': '3306',        # MySQL port (default is 3306)
     }
 }
 
