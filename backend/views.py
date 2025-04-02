@@ -118,7 +118,9 @@ class RequestPasswordReset(generics.GenericAPIView):
                 pass
 
             return Response({'success': 'We have sent you a link to reset your password',
-                             'reset_url' : f'{reset_url}'}, 
+                             'reset_url' : f'{reset_url}',
+                             "token" : token
+                             }, 
                             status=status.HTTP_200_OK)
         else:
             return Response({"error": "User with credentials not found"}, status=status.HTTP_404_NOT_FOUND)
