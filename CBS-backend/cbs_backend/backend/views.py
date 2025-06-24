@@ -346,6 +346,7 @@ class GetBookView(viewsets.ViewSet):
     queryset = Course.objects.all()
 
 
+
 class AddAudioView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = AudioSerializer

@@ -23,7 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
                                         p_image = validated_data['p_image']
                                         )
         Token.objects.create(user=user)
-
         return user
     
 class LoginSerializer(serializers.Serializer):
