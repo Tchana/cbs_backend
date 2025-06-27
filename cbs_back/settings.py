@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 import sys
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,9 +27,12 @@ SECRET_KEY = 'django-insecure-h$5v7@p%!qv^sv*)-f8dp+y3mq*ki7aj89j!nbk3n539iy(=vo
 DEBUG = True
 
 if sys.platform.startswith('linux'):
+    # If running on PythonAnywhere, set the allowed hosts accordingly
     ALLOWED_HOSTS = ["mardoche.pythonanywhere.com"]
 else:   
+    # If running locally or in a different environment, allow all hosts
     ALLOWED_HOSTS = []
+
 
 # Application definition
 
@@ -87,16 +89,11 @@ WSGI_APPLICATION = 'cbs_back.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
-            'NAME': 'postgres', 
-            'USER': 'postgres.tthnsfcgnhodbtogvazf',
-            'PASSWORD': '5Qp5_Ab_F7m!c6V',
-            'HOST': 'aws-0-eu-north-1.pooler.supabase.com',
-            'PORT': '5432'
-        }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-
+}
 
 
 # Password validation
