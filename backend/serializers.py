@@ -56,13 +56,13 @@ class GetStudentSerializer(serializers.Serializer):
 class AddBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language')
+        fields = "__all__"
         
 class GetBookSerializer(serializers.ModelSerializer):
     book = serializers.SerializerMethodField()
     class Meta:
         model = Book
-        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language')
+        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language', 'uuid')
         
     def get_file_url(self, obj):
         request = self.context.get('request')

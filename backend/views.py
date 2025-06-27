@@ -429,12 +429,38 @@ class GetLessonView(generics.ListAPIView):
         return (default_course, enrolled_courses)
 
 
+class DeleteBookView(APIView):
+    permission_classes = []
+    def delete(self, request, uuid):
+        try:
+            book = Book.objects.get(uuid=uuid)
+            book.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Book.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+class EditBookView(APIView):
+    permission_classes = []
+    
+    def patch(self, request, uuid):
+        try:
+            book = Book.objects.get(uuid=uuid)
+        except Book.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = AddBookSerializer(book, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 class AddBookView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = []
     serializer_class = AddBookSerializer
 
 class GetBookCategory(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
     serializer_class = GetBookSerializer
     queryset = Book
     def get(self, request, category):
@@ -453,6 +479,8 @@ class GetBookCategory(APIView):
            return Response(books, status = status.HTTP_200_OK)
        except Book.DoesNotExist:
            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
        
 class EditLessonView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -505,9 +533,8 @@ class GetBookInfo(APIView):
            return Response(status=status.HTTP_404_NOT_FOUND)
 
 class GetBookView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
     serializer_class = GetBookSerializer
-    
     def get(self, request):
         all_books =[]
         try:
@@ -516,7 +543,7 @@ class GetBookView(APIView):
                 info = {
                 'uuid' : bk.uuid,
                 'title' : bk.title,
-                'book' : request.build_absolute_uri(bk.book.url),
+                'book' : request.build_absolute_uri(bk.book),
                 'category' : bk.category,
                 'description' : bk.description,
                 'author' : bk.author,

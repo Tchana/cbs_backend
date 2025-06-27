@@ -32,7 +32,10 @@ urlpatterns = [
     
     path('book/add', AddBookView.as_view()),
     path('book/get', GetBookView.as_view()),
+    path('book/edit/<uuid>', EditBookView.as_view()),
+    path('book/delete/<uuid>', DeleteBookView.as_view()),
     path('book/<category>', GetBookCategory.as_view()),
+    
     path('audio', AddAudioView.as_view(), name='a_audio'),
     path('video', AddVideoView.as_view(), name='a_video') 
     
