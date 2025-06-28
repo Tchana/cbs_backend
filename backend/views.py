@@ -170,7 +170,7 @@ class GetAllUserView(APIView):
                     'lastName': user.lastName,
                     'email': user.email,
                     'role' : user.role,
-                    'pImage' : request.build_absolute_uri(user.pImage)
+                    'pImage' : request.build_absolute_uri(user.pImage.url)
                 }
                 user_list.append(data)
             return Response(user_list)
@@ -188,7 +188,7 @@ class GetUser(APIView):
                 'firstame': user.firstName,
                 'lastName': user.lastName,
                 'email': user.email,
-                'pImage' : request.build_absolute_uri(user.pImage)
+                'pImage' : request.build_absolute_uri(user.pImage.url)
             })
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -218,7 +218,7 @@ class GetTeacherView(APIView):
                 'firstName' : teacher.firstName,
                 'lastName' : teacher.lastName,
                 'email' : teacher.email,
-                'pImage' : request.build_absolute_uri(teacher.pImage),
+                'pImage' : request.build_absolute_uri(teacher.pImage.url),
                 'course' : course_list
             }
             teacher_list.append(info)
@@ -249,7 +249,7 @@ class GetStudentView(APIView):
                     'firstName': student.firstName,
                     'lastName': student.lastName,
                     'email': student.email,
-                    'pImage' : request.build_absolute_uri(student.pImage),
+                    'pImage' : request.build_absolute_uri(student.pImage.url),
                     'role' : student.role,
                     'enrolled_course' : enrollement_list
                 }
@@ -282,7 +282,7 @@ class GetMe(APIView):
                 'email': user.email,
                 'firstName': user.firstName,
                 'lastName': user.lastName,
-                'pImage': request.build_absolute_uri(user.pImage)})
+                'pImage': request.build_absolute_uri(user.pImage.url)})
         except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -304,7 +304,7 @@ class GetListCourses(APIView):
                     'title': course.title,
                     'description': course.description,
                     'level': course.level,
-                    'courseCover' : request.build_absolute_uri(course.courseCover),
+                    'courseCover' : str(course.courseCover.url) ,
                     'teacher': {
                         'id': course.teacher.uuid,
                         'firstName': course.teacher.firstName,
@@ -319,7 +319,7 @@ class GetListCourses(APIView):
                         'id': lesson.uuid,
                         'title': lesson.title,
                         'description': lesson.description,
-                        'file': request.build_absolute_uri(lesson.file) if lesson.file else None
+                        'file': request.build_absolute_uri(lesson.file.url) if lesson.file else None
                     }
                     data['lessons'].append(lesson_data)
                 
@@ -400,7 +400,7 @@ class GetLesson(APIView):
                     'id': lesson.uuid,
                     'title': lesson.title,
                     'description': lesson.description,
-                    'file': request.build_absolute_uri(lesson.file)
+                    'file': lesson.file.url if lesson.file else None
                     }
             data.append(lesson_data)
         
