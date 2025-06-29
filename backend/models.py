@@ -99,10 +99,15 @@ class Lesson(models.Model):
         return self.title
 
 class Book(models.Model):
+    CHOICES = (("bible", "Bible"),
+               ("dictionary", "Dictionary"),
+               ("commentary", "Commentary"),
+               ("random", "Random")
+               )
     title = models.CharField(max_length=100)
     author = models.CharField(max_length=100)
     book = models.FileField(upload_to='books/file')
-    category = models.CharField(max_length=50)
+    category = models.CharField(max_length=50, choices=CHOICES)
     bookCover = models.FileField(upload_to='books/book_cover')
     description = models.TextField(max_length=1000)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
