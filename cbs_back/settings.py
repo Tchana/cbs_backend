@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'backend',
+    'cbs_blogs',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
