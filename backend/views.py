@@ -14,45 +14,26 @@ from .serializers import *
 from .models import*
 import os
 
-
-# Create your views here.
-
-def home(request):
-    if request.method == 'GET':
-        return render(request, 'welcome.html')
-
-class IsAdmin(permissions.BasePermission):
-    '''custom permission for Admin'''
-
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.role == 'ADMIN'
-
-class isReaders(permissions.BasePermission):
-    pass
-
-class IsNotStudent(permissions.BasePermission):
-    '''custom permission for all users who are not student(admin and teacher)'''
-    pass
-
-class UserRegistrationView(generics.CreateAPIView):
+#####User management view
+class UserView(viewsets.ModelViewSet):
     '''User registration API view'''
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+    queryset = get_user_model().objects.all()
+    
+    def patch(self, request, uuid):
+        try:
+            user = get_user_model().objects.get(uuid=uuid)
+        except Course.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class BaseManageView(APIView):
-    """
-    The base class for ManageViews
-        A ManageView is a view which is used to dispatch the requests to the appropriate views
-        This is done so that we can use one URL with different methods (GET, PUT, etc)
-    """
-    def dispatch(self, request, *args, **kwargs):
-        if not hasattr(self, 'VIEWS_BY_METHOD'):
-            raise Exception('VIEWS_BY_METHOD static dictionary variable must be defined on a ManageView class!')
-        if request.method in self.VIEWS_BY_METHOD:
-            return self.VIEWS_BY_METHOD[request.method]()(request, *args, **kwargs)
-
-        return Response(status=405)
-
+    
 class UserLoginView(generics.CreateAPIView):
     '''User login API view'''
     serializer_class = LoginSerializer
@@ -67,21 +48,83 @@ class UserLoginView(generics.CreateAPIView):
             return Response({"token": user.auth_token.key})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        
 
-
-class EditUserProfileView(APIView):
+class GetTeacherView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def patch(self, request, uuid):
+
+    def get(self, request):
+        teachers = get_user_model().objects.filter(role='teacher')
+        teacher_list = []
+        for teacher in teachers:
+            info = {}
+            courses = Course.objects.filter(teacher=teacher.uuid)
+            course_list = []
+            if courses:
+                for course in courses:
+                    datas = {
+                        'uuid' : course.uuid,
+                        'title' : course.title,
+                        'description' : course.description
+                    }
+                course_list.append(datas)
+            
+            info = {
+                'uuid' : teacher.uuid,
+                'firstName' : teacher.firstName,
+                'lastName' : teacher.lastName,
+                'email' : teacher.email,
+                'pImage' : request.build_absolute_uri(teacher.pImage.url),
+                'course' : course_list
+            }
+            teacher_list.append(info)
+        return Response(teacher_list)
+        
+class GetStudentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request):
+        students = get_user_model().objects.filter(role="student")
+        student_list = []
+        if students is not None:
+            for student in students:
+                enrollement_list = []
+                enrolled_courses = Enrollement.objects.filter(student=student.uuid)
+                
+                if enrolled_courses:
+                    for enroll_course in enrolled_courses:
+                        info ={
+                            'uuid' : enroll_course.course.uuid,
+                            'title' : enroll_course.course.title,
+                            'description': enroll_course.course.description
+                        }
+                        enrollement_list.append(info)
+                data = {
+                    'uuid': student.uuid,
+                    'firstName': student.firstName,
+                    'lastName': student.lastName,
+                    'email': student.email,
+                    'pImage' : request.build_absolute_uri(student.pImage.url),
+                    'role' : student.role,
+                    'enrolled_course' : enrollement_list
+                }
+                student_list.append(data)
+            return Response(student_list)
+    
+class GetMe(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
         try:
-            user = get_user_model().objects.get(uuid=uuid)
-        except Course.DoesNotExist:
+            user = get_user_model().objects.get(uuid=self.request.user.uuid)
+            return Response({
+                'uuid': user.uuid,
+                'email': user.email,
+                'firstName': user.firstName,
+                'lastName': user.lastName,
+                'pImage': request.build_absolute_uri(user.pImage.url)})
+        except get_user_model().DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class RequestPasswordReset(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
@@ -122,7 +165,9 @@ class RequestPasswordReset(generics.GenericAPIView):
                             status=status.HTTP_200_OK)
         else:
             return Response({"error": "User with credentials not found"}, status=status.HTTP_404_NOT_FOUND)
+        
 
+###Account Management
 class ResetPassword(generics.GenericAPIView):
     serializer_class = ResetPasswordSerializer
     permission_classes = []
@@ -155,150 +200,21 @@ class ResetPassword(generics.GenericAPIView):
         else:
             return Response({'error': 'No user found'}, status=404)
         
-class GetAllUserView(APIView):
-    serializer_class = GetUserSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
-        users = get_user_model().objects.all()
-        user_list = []
-        if users is not None:
-            for user in users:
-                data = {
-                    'id': user.uuid,
-                    'firstName': user.firstName,
-                    'lastName': user.lastName,
-                    'email': user.email,
-                    'role' : user.role,
-                    'pImage' : request.build_absolute_uri(user.pImage.url)
-                }
-                user_list.append(data)
-            return Response(user_list)
+
         
-class GetUser(APIView):
-    serializer_class = GetUserSerializer
-    permission_classes = [permissions.AllowAny]
+###Courses's views
+class CourseView(viewsets.ModelViewSet):
+    queryset= Course.objects.prefetch_related('lessons', 'teacher').all()
+    serializer_class = CourseSerializer
 
-    def get(self, request, uuid):
-        try:
-            user = get_user_model().objects.get(uuid=self.request.user.uuid)
-            data = user
-            return Response({
-                'uuid': user.uuid,
-                'firstame': user.firstName,
-                'lastName': user.lastName,
-                'email': user.email,
-                'pImage' : request.build_absolute_uri(user.pImage.url)
-            })
-        except get_user_model().DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-class GetTeacherView(APIView):
-    serializer_class = GetTeacherSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request):
-        teachers = get_user_model().objects.filter(role='teacher')
-        teacher_list = []
-        for teacher in teachers:
-            info = {}
-            courses = Course.objects.filter(teacher=teacher.uuid)
-            course_list = []
-            if courses:
-                for course in courses:
-                    datas = {
-                        'uuid' : course.uuid,
-                        'title' : course.title,
-                        'description' : course.description
-                    }
-                course_list.append(datas)
-            
-            info = {
-                'uuid' : teacher.uuid,
-                'firstName' : teacher.firstName,
-                'lastName' : teacher.lastName,
-                'email' : teacher.email,
-                'pImage' : request.build_absolute_uri(teacher.pImage.url),
-                'course' : course_list
-            }
-            teacher_list.append(info)
-        return Response(teacher_list)
-        
-class GetStudentView(APIView):
-    serializer_class = GetStudentSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get(self, request):
-        students = get_user_model().objects.filter(role="student")
-        student_list = []
-        if students is not None:
-            for student in students:
-                enrollement_list = []
-                enrolled_courses = Enrollement.objects.filter(student=student.uuid)
-                
-                if enrolled_courses:
-                    for enroll_course in enrolled_courses:
-                        info ={
-                            'uuid' : enroll_course.course.uuid,
-                            'title' : enroll_course.course.title,
-                            'description': enroll_course.course.description
-                        }
-                        enrollement_list.append(info)
-                data = {
-                    'uuid': student.uuid,
-                    'firstName': student.firstName,
-                    'lastName': student.lastName,
-                    'email': student.email,
-                    'pImage' : request.build_absolute_uri(student.pImage.url),
-                    'role' : student.role,
-                    'enrolled_course' : enrollement_list
-                }
-                student_list.append(data)
-            return Response(student_list)
-        
-class DeleteUser(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def delete(self, request, uuid):
-        try:
-            user = get_user_model().objects.filter(uuid = uuid).get()
-            infos = user
-            user.delete()
-            return Response({
-                'uuid': infos.uuid,
-                'full_name' : infos.firstName + ' ' + infos.lastName,
-                'email':  infos.email,
-                'status' : 'deleted'
-            })
-        except get_user_model().DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        
-class GetMe(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def get(self, request):
-        try:
-            user = get_user_model().objects.get(uuid=self.request.user.uuid)
-            return Response({
-                'uuid': user.uuid,
-                'email': user.email,
-                'firstName': user.firstName,
-                'lastName': user.lastName,
-                'pImage': request.build_absolute_uri(user.pImage.url)})
-        except get_user_model().DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-class GetListCourses(APIView):
-    permission_classes = [permissions.AllowAny]
-    def get(self, request):
+    def list(self, request):
         scheme = request.scheme
         host = request.get_host()
         full_host_url = f"{scheme}://{host}"
         try:
-            # Prefetch related lessons and teachers for efficiency
-            courses = Course.objects.prefetch_related('lessons', 'teacher').all()
             datas = []
-
-            for course in courses:
+            for course in self.queryset:
                 data = {
                     'id': course.uuid,
                     'title': course.title,
@@ -327,24 +243,14 @@ class GetListCourses(APIView):
             return Response(datas)
         except Exception as e:
             return Response({'error': request.build_absolute_uri(e)}, status=500)
-
-
-class CreateCourseView(generics.CreateAPIView):
-    '''Create course API view'''
-    serializer_class = CreateCourseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class UpdateCourseView(APIView):
-    '''Modify course API view'''
-    permission_classes = [permissions.IsAuthenticated]
-
-    def patch(self, request, uuid):
+        
+        
+    def partial_update(self, request, pk=None):
         try:
-            course = Course.objects.get(uuid=uuid)
+            course = Course.objects.get(uuid=pk)
         except Course.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = UpdateCourseSerializer(course, data=request.data, partial=True)
+        serializer = CourseSerializer(course, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -352,213 +258,80 @@ class UpdateCourseView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class DeleteCourseView(generics.DestroyAPIView):
-    '''Delete course API view'''
+
+class LessonView(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = CourseSerializer
+    serializer_class = LessonSerializer
+    queryset = Course.objects.prefetch_related('lessons')
     
-    def delete(self, request, uuid):
-        try:
-            course = Course.objects.filter(uuid=uuid).get()
-            info = {
-                'title' : course.title,
-                'description' : course.description,
-                'level' : course.level,
-                'status' : 'deleted'
-            }
-            course.delete()
-            return Response(info)
-        except Course.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-            
-class CourseManagerView(BaseManageView):
-    VIEWS_BY_METHOD = {
-        'POST' :CreateCourseView.as_view,
-        'GET': GetListCourses.as_view,
-        'PATCH': UpdateCourseView.as_view,
-        'DELETE': DeleteCourseView.as_view
-    }
-
-
-class AddLessonView(generics.CreateAPIView):
-    '''Add Lesson API view'''
-    queryset = Lesson.objects.all()
-    serializer_class = CreateLessonSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class GetLesson(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = GetLessonSerializer
-    queryset = Lesson.objects.all()
-    
-    def get(self, request, uuid):
-        course = Course.objects.prefetch_related('lessons').get(uuid=uuid)
-        data = []
-        for lesson in course.lessons.all():
-            lesson_data = {
-                    'id': lesson.uuid,
-                    'title': lesson.title,
-                    'description': lesson.description,
-                    'file': lesson.file.url if lesson.file else None
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        param1 = request.GET.get('course_uuid', None)
+        if param1 is not None:
+            data = []
+            try:
+                course = Course.objects.get(uuid=param1)
+                for lesson in course.lessons.all():
+                    lesson_data = {
+                        'id': lesson.uuid,
+                        'title': lesson.title,
+                        'description': lesson.description,
+                        'file': lesson.file.url if lesson.file else None
                     }
-            data.append(lesson_data)
-        
-        return Response({'course_uuid' : f"{course.uuid}",
-                         "lessons" : data})
-
-class LessonManagerView(BaseManageView):
-    VIEWS_BY_METHOD = {
-        'POST' :AddLessonView.as_view,
-        'GET': GetLesson.as_view,
-    }
+                    data.append(lesson_data)
+                return Response({'course_uuid': f"{course.uuid}", "lessons": data})
+            except Course.DoesNotExist:
+                return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'error': 'course_uuid parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
     
+    def partial_update(self, request, pk=None):
+        try:
+            lesson = Lesson.objects.get(uuid=pk)
+        except Lesson.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        serializer = LessonSerializer(lesson, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, pk=None):
+        try:
+            lesson = Lesson.objects.get(uuid=pk)
+            lesson.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Lesson.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+
 class EnrollView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = EnrollSerializer
-
-
-class GetLessonView(generics.ListAPIView):
-    permission_classes = [permissions.AllowAny]
-
-    def get_queryset(self):
-        student = get_user_model().objects.get(user=self.request.user)
-        enrolled_courses = Enrollement.objects.filter(student=student, is_active=True).values_list('uuid', flat=True)
-        default_course = Course.objects.filter(level='level 1').values_list('uuid')
-
-        return (default_course, enrolled_courses)
-
-
-class DeleteBookView(APIView):
-    permission_classes = []
-    def delete(self, request, uuid):
-        try:
-            book = Book.objects.get(uuid=uuid)
-            book.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Book.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-class EditBookView(APIView):
-    permission_classes = []
     
-    def patch(self, request, uuid):
+
+###Book views
+class BookView(viewsets.ModelViewSet):
+    permission_classes = []
+    serializer_class = BookSerializer
+    queryset = Book.objects.all()
+    
+    def partial_update(self, request, pk=None):
         try:
-            book = Book.objects.get(uuid=uuid)
+            lesson = Book.objects.get(uuid=pk)
         except Book.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = AddBookSerializer(book, data=request.data, partial=True)
+        serializer = BookSerializer(lesson, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 
-class AddBookView(generics.CreateAPIView):
-    permission_classes = []
-    serializer_class = AddBookSerializer
-
-class GetBookCategory(APIView):
-    permission_classes = []
-    serializer_class = GetBookSerializer
-    queryset = Book
-    def get(self, request, category):
-       books =[]
-       try:
-           booksInCategory = Book.objects.filter(category=category)
-           for book in booksInCategory:
-               info = {
-               'uuid' : book.uuid,
-               'title' : book.title,
-               'book' : request.build_absolute_uri(book.book.url),
-               'category' : book.category,
-               'description' : book.description,
-           }
-               books.append(info)
-           return Response(books, status = status.HTTP_200_OK)
-       except Book.DoesNotExist:
-           return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-       
-class EditLessonView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def patch(self, request, uuid):
-        try:
-            lesson = Lesson.objects.get(uuid=uuid)
-        except Course.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = GetLessonSerializer(lesson, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
-class DeleteLessonView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def delete(self, request, uuid):
-        try:
-            lesson = Lesson.objects.filter(uuid=uuid).get()
-            datas = lesson
-            lesson.delete()
-            return Response({
-                'uuid': datas.uuid,
-                'title' : datas.title,
-                'status' : 'deleted',
-            })
-        except Course.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-class GetBookInfo(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    serializer_class = GetBookSerializer
-    queryset = Book
-    def get(self, request, category):
-       books =[]
-       try:
-           booksInCategory = Book.objects.all(category=category)
-           for book in booksInCategory:
-               info = {
-               'uuid' : book.uuid,
-               'title' : book.title,
-               'book' : request.build_absolute_uri(book.book),
-               'category' : book.category,
-               'description' : book.description,
-           }
-               books.append(info)
-           return Response(booksInCategory, status = status.HTTP_200_OK)
-       except Book.DoesNotExist:
-           return Response(status=status.HTTP_404_NOT_FOUND)
-
-class GetBookView(APIView):
-    permission_classes = []
-    serializer_class = GetBookSerializer
-    def get(self, request):
-        all_books =[]
-        try:
-            books = Book.objects.all()
-            for bk in books:
-                info = {
-                'uuid' : bk.uuid,
-                'title' : bk.title,
-                'book' : request.build_absolute_uri(bk.book.url),
-                'category' : bk.category,
-                'description' : bk.description,
-                'author' : bk.author,
-                'bookCover' : request.build_absolute_uri(bk.bookCover.url),
-                'language' : bk.language
-            }
-                all_books.append(info)
-            return Response(all_books, status = status.HTTP_200_OK)
-        except Book.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-            
-class AddAudioView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = AudioSerializer
-
-class AddVideoView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = VideoSerializer

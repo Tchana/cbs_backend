@@ -56,7 +56,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class PasswordReset(models.Model):
     email = models.EmailField()
     token = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
 
 class Course(models.Model):
@@ -71,6 +71,9 @@ class Course(models.Model):
     description = models.TextField(max_length=500)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     courseCover = models.ImageField(upload_to='courses/courseCover')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return self.title
@@ -85,6 +88,8 @@ class Enrollement(models.Model):
     student = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='registrations')
     registered_on = models.DateTimeField(auto_now_add=True)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
 class Lesson(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='lessons')
@@ -94,7 +99,9 @@ class Lesson(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     complete = models.BooleanField(default=False)
     open  = models.BooleanField(default=False)
-    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
     def __str__(self):
         return self.title
 
@@ -107,7 +114,9 @@ class Book(models.Model):
     description = models.TextField(max_length=1000)
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     language = models.CharField(max_length=100)
-    
+    create_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
     def __str__(self):
         return self.title
 
@@ -115,6 +124,8 @@ class Audio(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100)
     audio = models.FileField(upload_to='teaching', unique=True)
+    create_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
         if self.title:
@@ -126,6 +137,8 @@ class Video(models.Model):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=100)
     video = models.FileField(upload_to='teaching', unique=True)
+    create_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
         if self.title:

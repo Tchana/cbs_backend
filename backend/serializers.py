@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework.authtoken.models import Token
@@ -10,11 +9,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         User = get_user_model()
         model = User
-        fields = ('firstName', 'lastName','email', 'password', 'role', 'pImage')
+        fields = "__all__"
         
     def create(self, validated_data):
         User = get_user_model()
-        
         user = User.objects.create_user(email = validated_data['email'], 
                                         password = validated_data['password'], 
                                         role = validated_data['role'],
@@ -28,11 +26,6 @@ class UserSerializer(serializers.ModelSerializer):
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField(write_only = True)
     password = serializers.CharField(write_only = True)
-    
-class GetTeacherSerializer(serializers.Serializer):
-     class Meta :
-         model = get_user_model()
-         fields = ('id', 'email', 'firstName', 'lastName', 'uuid')
 
 class ResetPasswordRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -42,45 +35,28 @@ class ResetPasswordSerializer(serializers.Serializer):
                                           write_only=True,
                                           error_messages={'invalid': ('Password must be at least 8 characters long with at least one capital letter and symbol')})
     confirm_password = serializers.CharField(write_only=True, required=True)
-    
-class GetUserSerializer(serializers.Serializer):
-     class Meta :
-         model = get_user_model()
-         fields = ('id', 'email', 'firstName', 'lastName', 'uuid')
 
-class GetStudentSerializer(serializers.Serializer):
-     class Meta :
-         model = get_user_model()
-         fields = ('id', 'email', 'firstName', 'lastName')
 
-class AddBookSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Book
-        fields = "__all__"
-        
-class GetBookSerializer(serializers.ModelSerializer):
-    book = serializers.SerializerMethodField()
-    class Meta:
-        model = Book
-        fields = ('title', 'book', 'category', 'bookCover', 'description', 'language', 'uuid')
-        
-    def get_file_url(self, obj):
-        request = self.context.get('request')
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
-        return None
-     
 class CourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = '__all__'
+    """
+    CourseSerializer is a Django REST Framework serializer for the Course model.
+    Overview:
+        This serializer handles the serialization and deserialization of Course instances,
+        including validation and creation logic. It ensures that only users with the role
+        of 'teacher' can be assigned as the teacher for a course. The serializer exposes
+        all fields of the Course model and provides a custom create method for instantiating
+    Course objects from validated data.
+    Fields:
+    - teacher: PrimaryKeyRelatedField limited to users with the 'teacher' role.
+    Methods:
+    - create(validated_data): Creates and returns a new Course instance using the provided validated data.
+    """
 
-class CreateCourseSerializer(serializers.ModelSerializer):
     User = get_user_model()
     teacher = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(role='teacher'))
     class Meta:
         model = Course
-        fields =  ('title', 'description', 'teacher', 'level', 'courseCover')
+        fields =  "__all__"
         
     def create(self, validated_data):
         course = Course(title = validated_data['title'],
@@ -91,12 +67,50 @@ class CreateCourseSerializer(serializers.ModelSerializer):
         course.save()
         return course
 
-class UpdateCourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields =  '__all__'
+
+class LessonSerializer(serializers.ModelSerializer):
+    """
+    LessonSerializer is a ModelSerializer for the Lesson model.
+    Overview:
+        This serializer handles the serialization and deserialization of Lesson instances,
+        including validation and creation logic. It exposes all fields of the Lesson model,
+        and represents the related Course as a primary key.
+    Fields:
+        - course: PrimaryKeyRelatedField to associate a Lesson with a Course.
+        - All other fields from the Lesson model are included.
+    Methods:
+        - create(validated_data): Custom creation logic for Lesson instances using validated data.
+    """
     
+    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
+    class Meta:
+        model = Lesson
+        fields = "__all__"
+            
+    def create(self, validated_data):
+        lesson = Lesson(title = validated_data['title'],
+                        description=validated_data['description'],
+                        file=validated_data['file'],
+                        course = validated_data['course']
+                        )
+        lesson.save()
+        return lesson
+    
+
 class EnrollSerializer(serializers.ModelSerializer):
+    """
+    EnrollSerializer is a ModelSerializer for handling enrollment of students in courses.
+    Overview:
+        This serializer manages the serialization and deserialization of Enrollement model instances,
+        specifically for associating a student with a course. It ensures that only users with the
+        'student' role can be enrolled and that the referenced course exists.
+    Fields:
+        - course: Primary key reference to a Course instance.
+        - student: Primary key reference to a User instance with the 'student' role.
+    Usage:
+        Use this serializer to validate and create enrollment records linking students to courses.
+    """
+    
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     student = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.filter(role = 'student'))
     class Meta:
@@ -109,35 +123,13 @@ class EnrollSerializer(serializers.ModelSerializer):
                                       )
             enrolloment.save()
             
-class GetLessonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Lesson
-        fields = '__all__'
-    
-class CreateLessonSerializer(serializers.ModelSerializer):
-    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    class Meta:
-        model = Lesson
-        fields = ('uuid','course', 'title', 'file', 'description')
-            
-    def create(self, validated_data):
-        lesson = Lesson(title = validated_data['title'],
-                        description=validated_data['description'],
-                        file=validated_data['file'],
-                        course = validated_data['course']
-                        )
-        lesson.save()
-        return lesson
 
-class AudioSerializer(serializers.ModelSerializer):
-    class Meta :
-        model = Audio
-        fields = ('title', 'description')
 
-class VideoSerializer(serializers.ModelSerializer):
+class BookSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Video
-        fields = ('title', 'description')
+        model = Book
+        fields = "__all__"
+        
         
 class ResetPasswordRequestSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
