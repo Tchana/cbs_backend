@@ -11,5 +11,5 @@ class BlogViewSet(viewsets.ModelViewSet):
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
-    serializer_class = BlogSerializer   
+    serializer_class = EventSerializer   
     permission_classes = [] 

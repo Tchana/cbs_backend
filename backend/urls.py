@@ -12,11 +12,12 @@ router.register(r'user', UserView, basename='users')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('teachers/', GetTeacherView.as_view(), name='g_teacher'),
-    path('students/', GetStudentView.as_view(), name='g_student'),
-    path('me', GetMe.as_view(), name='g_p'),
-    path('request_reset/', RequestPasswordReset.as_view(), name='r_resetpwd'),
-    path('reset/<token>/', ResetPassword.as_view(), name='r_resetpwd'),    
-    path('course/enroll/', EnrollView.as_view(), name='subcourse'),
+    path('login/', UserLoginView.as_view()),
+    path('teachers/', GetTeacherView.as_view()),
+    path('students/', GetStudentView.as_view()),
+    path('me/', GetMe.as_view(), name='g_p'),
+    path('request_reset/', RequestPasswordReset.as_view()),
+    path('reset/<token>/', ResetPassword.as_view()),    
+    path('course/enroll/', EnrollView.as_view()),
    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

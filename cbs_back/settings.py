@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'backend',
     'cbs_blogs',
+    'forum',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
