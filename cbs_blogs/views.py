@@ -18,7 +18,7 @@ class BlogViewSet(viewsets.ModelViewSet):
                 "title": query.title,
                 "content": query.content,
                 "author" : query.author,
-                "image": query.image.url,
+                "image": request.build_absolute_uri(query.image.url),
                 "created_at": query.created_at,
                 "updated_at": query.updated_at,
                 "description": query.description
@@ -37,7 +37,7 @@ class EventViewSet(viewsets.ModelViewSet):
             blog = {
                 "title": query.title,
                 "content": query.content,
-                "image": query.image.url,
+                "image": request.build_absolute_uri(query.image.url),
                 "created_at": query.created_at,
                 "updated_at": query.updated_at,
                 "description": query.description
