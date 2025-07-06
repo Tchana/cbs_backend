@@ -10,6 +10,21 @@ class BlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer   
     permission_classes = [] 
+    
+    def list(self, request):
+        data = []
+        for query in self.queryset:
+            blog = {
+                "title": query.title,
+                "content": query.content,
+                "author" : query.author,
+                "image": query.image.url,
+                "created_at": query.created_at,
+                "updated_at": query.updated_at,
+                "description": query.description
+            }
+            data.append(blog)
+        return Response(data, status=status.HTTP_200_OK)
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -22,7 +37,6 @@ class EventViewSet(viewsets.ModelViewSet):
             blog = {
                 "title": query.title,
                 "content": query.content,
-                "author": query.author,
                 "image": query.image.url,
                 "created_at": query.created_at,
                 "updated_at": query.updated_at,
